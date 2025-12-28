@@ -861,12 +861,22 @@ export class WhatsappSessionGoWSCore extends WhatsappSession {
     return true;
   }
 
-  protected setProfilePicture(file: BinaryFile | RemoteFile): Promise<boolean> {
-    throw new AvailableInPlusVersion();
+  protected async setProfilePicture(file: BinaryFile | RemoteFile): Promise<boolean> {
+    const buffer = await this.getFileBuffer(file);
+    const request = new messages.SetProfilePictureRequest({
+      session: this.session,
+      picture: buffer,
+    });
+    await promisify(this.client.SetProfilePicture)(request);
+    return true;
   }
 
-  protected deleteProfilePicture(): Promise<boolean> {
-    throw new AvailableInPlusVersion();
+  protected async deleteProfilePicture(): Promise<boolean> {
+    const request = new messages.DeleteProfilePictureRequest({
+      session: this.session,
+    });
+    await promisify(this.client.DeleteProfilePicture)(request);
+    return true;
   }
 
   /**
@@ -1082,16 +1092,68 @@ export class WhatsappSessionGoWSCore extends WhatsappSession {
     throw new NotImplementedByEngineError();
   }
 
-  sendImage(request: MessageImageRequest) {
-    throw new AvailableInPlusVersion();
+  @Activity()
+  async sendImage(request: MessageImageRequest) {
+    const jid = this.ensureSuffix(request.chatId);
+    const buffer = await this.getFileBuffer(request.file);
+    const message = new messages.SendMessageRequest({
+      session: this.session,
+      jid: jid,
+      image: new messages.Image({
+        data: buffer,
+        caption: request.caption,
+        filename: request.file.filename,
+        mimetype: request.file.mimetype || 'image/jpeg',
+      }),
+      mentions: request.mentions,
+      replyTo: request.reply_to,
+    });
+    const response = await promisify(this.client.SendMessage)(message);
+    const data = response.toObject();
+    return this.messageResponse(jid, data);
   }
 
-  sendFile(request: MessageFileRequest) {
-    throw new AvailableInPlusVersion();
+  @Activity()
+  async sendFile(request: MessageFileRequest) {
+    const jid = this.ensureSuffix(request.chatId);
+    const buffer = await this.getFileBuffer(request.file);
+    const message = new messages.SendMessageRequest({
+      session: this.session,
+      jid: jid,
+      file: new messages.File({
+        data: buffer,
+        caption: request.caption,
+        filename: request.file.filename || 'file',
+        mimetype: request.file.mimetype || 'application/octet-stream',
+      }),
+      mentions: request.mentions,
+      replyTo: request.reply_to,
+    });
+    const response = await promisify(this.client.SendMessage)(message);
+    const data = response.toObject();
+    return this.messageResponse(jid, data);
   }
 
-  sendVoice(request: MessageVoiceRequest) {
-    throw new AvailableInPlusVersion();
+  @Activity()
+  async sendVoice(request: MessageVoiceRequest) {
+    const jid = this.ensureSuffix(request.chatId);
+    let buffer = await this.getFileBuffer(request.file);
+
+    if (request.file.convert) {
+      buffer = await this.mediaConverter.voice(buffer);
+    }
+
+    const message = new messages.SendMessageRequest({
+      session: this.session,
+      jid: jid,
+      voice: new messages.Voice({
+        data: buffer,
+      }),
+      replyTo: request.reply_to,
+    });
+    const response = await promisify(this.client.SendMessage)(message);
+    const data = response.toObject();
+    return this.messageResponse(jid, data);
   }
 
   sendLinkCustomPreview(

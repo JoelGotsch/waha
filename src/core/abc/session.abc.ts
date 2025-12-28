@@ -1204,6 +1204,14 @@ export abstract class WhatsappSession {
     return fetchBuffer(url);
   }
 
+  protected async getFileBuffer(file: BinaryFile | RemoteFile): Promise<Buffer> {
+    if ('url' in file) {
+      return this.fetch(file.url);
+    } else {
+      return Buffer.from(file.data, 'base64');
+    }
+  }
+
   public async resolveMentionsAll(chatId: string): Promise<string[]> {
     const participants = await this.getGroupParticipants(chatId);
     let mentions = participants.map((p) => p.id);

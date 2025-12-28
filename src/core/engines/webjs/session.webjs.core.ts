@@ -666,12 +666,16 @@ export class WhatsappSessionWebJSCore extends WhatsappSession {
     return true;
   }
 
-  protected setProfilePicture(file: BinaryFile | RemoteFile): Promise<boolean> {
-    throw new AvailableInPlusVersion();
+  protected async setProfilePicture(file: BinaryFile | RemoteFile): Promise<boolean> {
+    const buffer = await this.getFileBuffer(file);
+    const media = new MessageMedia('image/jpeg', buffer.toString('base64'));
+    await this.whatsapp.setProfilePicture(media);
+    return true;
   }
 
-  protected deleteProfilePicture(): Promise<boolean> {
-    throw new AvailableInPlusVersion();
+  protected async deleteProfilePicture(): Promise<boolean> {
+    await this.whatsapp.deleteProfilePicture();
+    return true;
   }
 
   /**
@@ -764,16 +768,69 @@ export class WhatsappSessionWebJSCore extends WhatsappSession {
     );
   }
 
-  sendImage(request: MessageImageRequest) {
-    throw new AvailableInPlusVersion();
+  @Activity()
+  async sendImage(request: MessageImageRequest) {
+    const buffer = await this.getFileBuffer(request.file);
+    const media = new MessageMedia(
+      request.file.mimetype || 'image/jpeg',
+      buffer.toString('base64'),
+      request.file.filename,
+    );
+    const options = this.getMessageOptions(request);
+    if (request.caption) {
+      options.caption = request.caption;
+    }
+    if (request.mentions) {
+      options.mentions = request.mentions;
+    }
+    return this.whatsapp.sendMessage(
+      this.ensureSuffix(request.chatId),
+      media,
+      options,
+    );
   }
 
-  sendFile(request: MessageFileRequest) {
-    throw new AvailableInPlusVersion();
+  @Activity()
+  async sendFile(request: MessageFileRequest) {
+    const buffer = await this.getFileBuffer(request.file);
+    const media = new MessageMedia(
+      request.file.mimetype || 'application/octet-stream',
+      buffer.toString('base64'),
+      request.file.filename || 'file',
+    );
+    const options = this.getMessageOptions(request);
+    if (request.caption) {
+      options.caption = request.caption;
+    }
+    if (request.mentions) {
+      options.mentions = request.mentions;
+    }
+    return this.whatsapp.sendMessage(
+      this.ensureSuffix(request.chatId),
+      media,
+      options,
+    );
   }
 
-  sendVoice(request: MessageVoiceRequest) {
-    throw new AvailableInPlusVersion();
+  @Activity()
+  async sendVoice(request: MessageVoiceRequest) {
+    let buffer = await this.getFileBuffer(request.file);
+
+    if (request.file.convert) {
+      buffer = await this.mediaConverter.voice(buffer);
+    }
+
+    const media = new MessageMedia(
+      'audio/ogg; codecs=opus',
+      buffer.toString('base64'),
+    );
+    const options = this.getMessageOptions(request);
+    options.sendAudioAsVoice = true;
+    return this.whatsapp.sendMessage(
+      this.ensureSuffix(request.chatId),
+      media,
+      options,
+    );
   }
 
   sendButtonsReply(request: MessageButtonReply) {
