@@ -16,6 +16,7 @@
 
 <!-- toc -->
 
+- [Features](#features)
 - [Quick start](#quick-start)
   * [Requirements](#requirements)
   * [Send your first message](#send-your-first-message)
@@ -30,6 +31,22 @@
   * [Start the project](#start-the-project)
 
 <!-- tocstop -->
+
+# Features
+
+WAHA Core now includes extensive features that were previously only available in WAHA Plus!
+
+**Newly available in Core version:**
+- Media conversion (voice to OGG/Opus, video to MP4) using ffmpeg
+- Profile picture management (set/delete for accounts and groups)
+- Complete media sending capabilities (images, files, voice messages)
+- Custom link previews (NOWEB engine)
+- Enhanced health checks with session statistics
+- Channel country information
+
+For a complete list of features and implementation details, see [CORE_FEATURES.md](CORE_FEATURES.md).
+
+For engine-specific feature comparison, see the [official documentation](https://waha.devlike.pro/docs/how-to/engines/#features).
 
 # Quick start
 
