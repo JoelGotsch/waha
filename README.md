@@ -97,8 +97,18 @@ The example payload:
 }
 ```
 
+You can start multiple sessions (WhatsApp accounts) inside the single docker container by using different `name` values:
+```json
+{
+  "name": "user1"
+}
+```
 
-By using the request with `name` values you can start multiple session (WhatsApp accounts) inside the single docker container in Plus
+```json
+{
+  "name": "company-account"
+}
+```
 
 
 ### 4. Get and scan QR
